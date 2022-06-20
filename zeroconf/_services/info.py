@@ -134,7 +134,7 @@ class ServiceInfo(RecordUpdateListener):
         self.port = port
         self.weight = weight
         self.priority = priority
-        self.server = server if server else name
+        self.server = server or name
         self.server_key = self.server.lower()
         self._properties: Dict[Union[str, bytes], Optional[Union[str, bytes]]] = {}
         if isinstance(properties, bytes):
@@ -354,9 +354,8 @@ class ServiceInfo(RecordUpdateListener):
             self.priority = record.priority
             return
 
-        if isinstance(record, DNSText):
-            if record.key == self.key:
-                self._set_text(record.text)
+        if isinstance(record, DNSText) and record.key == self.key:
+            self._set_text(record.text)
 
     def dns_addresses(
         self,
@@ -427,16 +426,21 @@ class ServiceInfo(RecordUpdateListener):
         """
         now = current_time_millis()
         record_updates: List[RecordUpdate] = []
-        cached_srv_record = zc.cache.get_by_details(self.name, _TYPE_SRV, _CLASS_IN)
-        if cached_srv_record:
+        if cached_srv_record := zc.cache.get_by_details(
+            self.name, _TYPE_SRV, _CLASS_IN
+        ):
             # If there is a srv record, A and AAAA will already
             # be called and we do not want to do it twice
             record_updates.append(RecordUpdate(cached_srv_record, None))
         else:
-            for record in self._get_address_records_from_cache(zc):
-                record_updates.append(RecordUpdate(record, None))
-        cached_txt_record = zc.cache.get_by_details(self.name, _TYPE_TXT, _CLASS_IN)
-        if cached_txt_record:
+            record_updates.extend(
+                RecordUpdate(record, None)
+                for record in self._get_address_records_from_cache(zc)
+            )
+
+        if cached_txt_record := zc.cache.get_by_details(
+            self.name, _TYPE_TXT, _CLASS_IN
+        ):
             record_updates.append(RecordUpdate(cached_txt_record, None))
         self._process_records_threadsafe(zc, now, record_updates)
         return self._is_complete

@@ -427,14 +427,11 @@ class RecordManager:
             if not record.is_expired(now):
                 if maybe_entry is not None:
                     maybe_entry.reset_ttl(record)
+                elif isinstance(record, DNSAddress):
+                    address_adds.append(record)
                 else:
-                    if isinstance(record, DNSAddress):
-                        address_adds.append(record)
-                    else:
-                        other_adds.append(record)
+                    other_adds.append(record)
                 updates.append(RecordUpdate(record, maybe_entry))
-            # This is likely a goodbye since the record is
-            # expired and exists in the cache
             elif maybe_entry is not None:
                 updates.append(RecordUpdate(record, maybe_entry))
                 removes.add(record)
@@ -511,9 +508,11 @@ class RecordManager:
         now = current_time_millis()
         records: List[RecordUpdate] = []
         for question in questions:
-            for record in self.cache.async_entries_with_name(question.name):
-                if not record.is_expired(now) and question.answered_by(record):
-                    records.append(RecordUpdate(record, None))
+            records.extend(
+                RecordUpdate(record, None)
+                for record in self.cache.async_entries_with_name(question.name)
+                if not record.is_expired(now) and question.answered_by(record)
+            )
 
         if not records:
             return

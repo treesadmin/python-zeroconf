@@ -885,7 +885,7 @@ async def test_qu_response_only_sends_additionals_if_sends_answer():
     query = r.DNSOutgoing(const._FLAGS_QR_QUERY)
     question = r.DNSQuestion(info.type, const._TYPE_PTR, const._CLASS_IN)
     question.unicast = True  # Set the QU bit
-    assert question.unicast is True
+    assert question.unicast
     query.add_question(question)
 
     question_answers = zc.query_handler.async_response(
@@ -909,7 +909,7 @@ async def test_qu_response_only_sends_additionals_if_sends_answer():
     query = r.DNSOutgoing(const._FLAGS_QR_QUERY)
     question = r.DNSQuestion(info.type, const._TYPE_PTR, const._CLASS_IN)
     question.unicast = True  # Set the QU bit
-    assert question.unicast is True
+    assert question.unicast
     query.add_question(question)
 
     question_answers = zc.query_handler.async_response(
@@ -932,7 +932,7 @@ async def test_qu_response_only_sends_additionals_if_sends_answer():
     query = r.DNSOutgoing(const._FLAGS_QR_QUERY)
     question = r.DNSQuestion(info.type, const._TYPE_PTR, const._CLASS_IN)
     question.unicast = True  # Set the QU bit
-    assert question.unicast is True
+    assert question.unicast
     query.add_question(question)
 
     question_answers = zc.query_handler.async_response(
@@ -954,12 +954,12 @@ async def test_qu_response_only_sends_additionals_if_sends_answer():
     query = r.DNSOutgoing(const._FLAGS_QR_QUERY)
     question = r.DNSQuestion(info.type, const._TYPE_PTR, const._CLASS_IN)
     question.unicast = True  # Set the QU bit
-    assert question.unicast is True
+    assert question.unicast
     query.add_question(question)
 
     question = r.DNSQuestion(info2.type, const._TYPE_PTR, const._CLASS_IN)
     question.unicast = True  # Set the QU bit
-    assert question.unicast is True
+    assert question.unicast
     query.add_question(question)
     zc.cache.async_add_records([info2.dns_pointer()])  # Add 100% TTL for info2 to the cache
 

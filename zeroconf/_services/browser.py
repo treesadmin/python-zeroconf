@@ -105,9 +105,11 @@ def _group_ptr_queries_with_known_answers(
     # goal of this algorithm is to quickly bucket the query + known answers without
     # the overhead of actually constructing the packets.
     query_by_size: Dict[DNSQuestion, int] = {
-        question: (question.max_size + sum([answer.max_size_compressed for answer in known_answers]))
+        question: question.max_size
+        + sum(answer.max_size_compressed for answer in known_answers)
         for question, known_answers in question_with_known_answers.items()
     }
+
     max_bucket_size = _MAX_MSG_TYPICAL - _DNS_PACKET_HEADER_LEN
     query_buckets: List[_DNSPointerOutgoingBucket] = []
     for question in sorted(
@@ -145,11 +147,14 @@ def generate_service_query(
     for type_ in types_:
         question = DNSQuestion(type_, _TYPE_PTR, _CLASS_IN)
         question.unicast = qu_question
-        known_answers = set(
+        known_answers = {
             cast(DNSPointer, record)
-            for record in zc.cache.get_all_by_details(type_, _TYPE_PTR, _CLASS_IN)
+            for record in zc.cache.get_all_by_details(
+                type_, _TYPE_PTR, _CLASS_IN
+            )
             if not record.is_stale(now)
-        )
+        }
+
         if not qu_question and zc.question_history.suppresses(
             question, now, cast(Set[DNSRecord], known_answers)
         ):
@@ -370,15 +375,13 @@ class _ServiceBrowserBase(RecordUpdateListener):
         if isinstance(record, DNSAddress):
             # Iterate through the DNSCache and callback any services that use this address
             for service in self.zc.cache.async_entries_with_server(record.name):
-                type_ = self._record_matching_type(service)
-                if type_:
+                if type_ := self._record_matching_type(service):
                     self._enqueue_callback(ServiceStateChange.Updated, type_, service.name)
                     break
 
             return
 
-        type_ = self._record_matching_type(record)
-        if type_:
+        if type_ := self._record_matching_type(record):
             self._enqueue_callback(ServiceStateChange.Updated, type_, record.name)
 
     def async_update_records(self, zc: 'Zeroconf', now: float, records: List[RecordUpdate]) -> None:
@@ -465,8 +468,7 @@ class _ServiceBrowserBase(RecordUpdateListener):
 
     def _async_send_ready_queries(self) -> None:
         """Send any ready queries."""
-        outs = self._generate_ready_queries(self._first_request)
-        if outs:
+        if outs := self._generate_ready_queries(self._first_request):
             self._first_request = False
             for out in outs:
                 self.zc.async_send(out, addr=self.addr, port=self.port)
@@ -515,10 +517,7 @@ class ServiceBrowser(_ServiceBrowserBase, threading.Thread):
         self.daemon = True
         self.start()
         zc.loop.call_soon_threadsafe(self._async_start)
-        self.name = "zeroconf-ServiceBrowser-%s-%s" % (
-            '-'.join([type_[:-7] for type_ in self.types]),
-            getattr(self, 'native_id', self.ident),
-        )
+        self.name = f"zeroconf-ServiceBrowser-{'-'.join([type_[:-7] for type_ in self.types])}-{getattr(self, 'native_id', self.ident)}"
 
     def cancel(self) -> None:
         """Cancel the browser."""

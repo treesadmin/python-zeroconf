@@ -36,9 +36,7 @@ _WAIT_FOR_LOOP_TASKS_TIMEOUT = 3  # Must be larger than _TASK_AWAIT_TIMEOUT
 
 def get_best_available_queue() -> queue.Queue:
     """Create the best available queue type."""
-    if hasattr(queue, "SimpleQueue"):
-        return queue.SimpleQueue()  # type: ignore  # pylint: disable=all
-    return queue.Queue()
+    return queue.SimpleQueue() if hasattr(queue, "SimpleQueue") else queue.Queue()
 
 
 # Switch to asyncio.wait_for once https://bugs.python.org/issue39032 is fixed
@@ -102,7 +100,7 @@ def shutdown_loop(loop: asyncio.AbstractEventLoop) -> None:
     pending_tasks = set(
         asyncio.run_coroutine_threadsafe(_async_get_all_tasks(loop), loop).result(_GET_ALL_TASKS_TIMEOUT)
     )
-    pending_tasks -= set(task for task in pending_tasks if task.done())
+    pending_tasks -= {task for task in pending_tasks if task.done()}
     if pending_tasks:
         asyncio.run_coroutine_threadsafe(_wait_for_loop_tasks(pending_tasks), loop).result(
             _WAIT_FOR_LOOP_TASKS_TIMEOUT

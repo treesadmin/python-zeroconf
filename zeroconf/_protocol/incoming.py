@@ -127,15 +127,15 @@ class DNSIncoming(DNSMessage, QuietLogger):
     def __repr__(self) -> str:
         return '<DNSIncoming:{%s}>' % ', '.join(
             [
-                'id=%s' % self.id,
-                'flags=%s' % self.flags,
-                'truncated=%s' % self.truncated,
-                'n_q=%s' % self.num_questions,
-                'n_ans=%s' % self.num_answers,
-                'n_auth=%s' % self.num_authorities,
-                'n_add=%s' % self.num_additionals,
-                'questions=%s' % self.questions,
-                'answers=%s' % self.answers,
+                f'id={self.id}',
+                f'flags={self.flags}',
+                f'truncated={self.truncated}',
+                f'n_q={self.num_questions}',
+                f'n_ans={self.num_answers}',
+                f'n_auth={self.num_authorities}',
+                f'n_add={self.num_additionals}',
+                f'questions={self.questions}',
+                f'answers={self.answers}',
             ]
         )
 
@@ -262,9 +262,12 @@ class DNSIncoming(DNSMessage, QuietLogger):
             window = self.data[self.offset]
             bitmap_length = self.data[self.offset + 1]
             for i, byte in enumerate(self.data[self.offset + 2 : self.offset + 2 + bitmap_length]):
-                for bit in range(0, 8):
-                    if byte & (0x80 >> bit):
-                        rdtypes.append(bit + window * 256 + i * 8)
+                rdtypes.extend(
+                    bit + window * 256 + i * 8
+                    for bit in range(8)
+                    if byte & (0x80 >> bit)
+                )
+
             self.offset += 2 + bitmap_length
         return rdtypes
 

@@ -155,10 +155,14 @@ class DNSCache:
         matching entry."""
         if isinstance(entry, _UNIQUE_RECORD_TYPES):
             return self.cache.get(entry.key, {}).get(entry)
-        for cached_entry in reversed(list(self.cache.get(entry.key, []))):
-            if entry.__eq__(cached_entry):
-                return cached_entry
-        return None
+        return next(
+            (
+                cached_entry
+                for cached_entry in reversed(list(self.cache.get(entry.key, [])))
+                if entry.__eq__(cached_entry)
+            ),
+            None,
+        )
 
     def get_by_details(self, name: str, type_: int, class_: int) -> Optional[DNSRecord]:
         """Gets the first matching entry by details. Returns None if no entries match.
@@ -173,10 +177,14 @@ class DNSCache:
         Use get_all_by_details instead.
         """
         key = name.lower()
-        for cached_entry in reversed(list(self.cache.get(key, []))):
-            if dns_entry_matches(cached_entry, key, type_, class_):
-                return cached_entry
-        return None
+        return next(
+            (
+                cached_entry
+                for cached_entry in reversed(list(self.cache.get(key, [])))
+                if dns_entry_matches(cached_entry, key, type_, class_)
+            ),
+            None,
+        )
 
     def get_all_by_details(self, name: str, type_: int, class_: int) -> List[DNSRecord]:
         """Gets all matching entries by details."""
@@ -195,14 +203,18 @@ class DNSCache:
 
     def current_entry_with_name_and_alias(self, name: str, alias: str) -> Optional[DNSRecord]:
         now = current_time_millis()
-        for record in reversed(self.entries_with_name(name)):
-            if (
-                record.type == _TYPE_PTR
-                and not record.is_expired(now)
-                and cast(DNSPointer, record).alias == alias
-            ):
-                return record
-        return None
+        return next(
+            (
+                record
+                for record in reversed(self.entries_with_name(name))
+                if (
+                    record.type == _TYPE_PTR
+                    and not record.is_expired(now)
+                    and cast(DNSPointer, record).alias == alias
+                )
+            ),
+            None,
+        )
 
     def names(self) -> List[str]:
         """Return a copy of the list of current cache names."""

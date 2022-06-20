@@ -178,11 +178,7 @@ class TestServiceBrowser(unittest.TestCase):
             generated = r.DNSOutgoing(const._FLAGS_QR_RESPONSE)
             assert generated.is_response() is True
 
-            if service_state_change == r.ServiceStateChange.Removed:
-                ttl = 0
-            else:
-                ttl = 120
-
+            ttl = 0 if service_state_change == r.ServiceStateChange.Removed else 120
             generated.add_answer_at_time(
                 r.DNSText(
                     service_name, const._TYPE_TXT, const._CLASS_IN | const._CLASS_UNIQUE, ttl, service_text
@@ -902,7 +898,9 @@ def test_group_ptr_queries_with_known_answers():
     now = current_time_millis()
     for i in range(120):
         name = f"_hap{i}._tcp._local."
-        questions_with_known_answers[DNSQuestion(name, const._TYPE_PTR, const._CLASS_IN)] = set(
+        questions_with_known_answers[
+            DNSQuestion(name, const._TYPE_PTR, const._CLASS_IN)
+        ] = {
             DNSPointer(
                 name,
                 const._TYPE_PTR,
@@ -911,7 +909,8 @@ def test_group_ptr_queries_with_known_answers():
                 f"zoo{counter}.{name}",
             )
             for counter in range(i)
-        )
+        }
+
     outs = _services_browser._group_ptr_queries_with_known_answers(now, True, questions_with_known_answers)
     for out in outs:
         packets = out.packets()
@@ -937,7 +936,7 @@ async def test_generate_service_query_suppress_duplicate_questions():
         10000,
         f'known-to-other.{name}',
     )
-    other_known_answers = set([answer])
+    other_known_answers = {answer}
     zc.question_history.add_question_at_time(question, now, other_known_answers)
     assert zc.question_history.suppresses(question, now, other_known_answers)
 
@@ -976,7 +975,7 @@ async def test_generate_service_query_suppress_duplicate_questions():
 @pytest.mark.asyncio
 async def test_query_scheduler():
     delay = const._BROWSER_TIME
-    types_ = set(["_hap._tcp.local.", "_http._tcp.local."])
+    types_ = {"_hap._tcp.local.", "_http._tcp.local."}
     query_scheduler = _services_browser.QueryScheduler(types_, delay, (0, 0))
 
     now = current_time_millis()
@@ -988,33 +987,38 @@ async def test_query_scheduler():
     assert query_scheduler.millis_to_wait(now + 1) is 0
 
     assert set(query_scheduler.process_ready_types(now)) == types_
-    assert set(query_scheduler.process_ready_types(now)) == set()
+    assert not set(query_scheduler.process_ready_types(now))
     assert query_scheduler.millis_to_wait(now) == delay
 
     assert set(query_scheduler.process_ready_types(now + delay)) == types_
-    assert set(query_scheduler.process_ready_types(now + delay)) == set()
+    assert not set(query_scheduler.process_ready_types(now + delay))
     assert query_scheduler.millis_to_wait(now) == delay * 3
 
     assert set(query_scheduler.process_ready_types(now + delay * 3)) == types_
-    assert set(query_scheduler.process_ready_types(now + delay * 3)) == set()
+    assert not set(query_scheduler.process_ready_types(now + delay * 3))
     assert query_scheduler.millis_to_wait(now) == delay * 7
 
     assert set(query_scheduler.process_ready_types(now + delay * 7)) == types_
-    assert set(query_scheduler.process_ready_types(now + delay * 7)) == set()
+    assert not set(query_scheduler.process_ready_types(now + delay * 7))
     assert query_scheduler.millis_to_wait(now) == delay * 15
 
     assert set(query_scheduler.process_ready_types(now + delay * 15)) == types_
-    assert set(query_scheduler.process_ready_types(now + delay * 15)) == set()
+    assert not set(query_scheduler.process_ready_types(now + delay * 15))
 
     # Test if we reschedule 1 second later, the millis_to_wait goes up by 1
     query_scheduler.reschedule_type("_hap._tcp.local.", now + delay * 16)
     assert query_scheduler.millis_to_wait(now) == delay * 16
 
-    assert set(query_scheduler.process_ready_types(now + delay * 15)) == set()
+    assert not set(query_scheduler.process_ready_types(now + delay * 15))
 
     # Test if we reschedule 1 second later... and its ready for processing
-    assert set(query_scheduler.process_ready_types(now + delay * 16)) == set(["_hap._tcp.local."])
-    assert query_scheduler.millis_to_wait(now) == delay * 31
-    assert set(query_scheduler.process_ready_types(now + delay * 20)) == set()
+    assert set(query_scheduler.process_ready_types(now + delay * 16)) == {
+        "_hap._tcp.local."
+    }
 
-    assert set(query_scheduler.process_ready_types(now + delay * 31)) == set(["_http._tcp.local."])
+    assert query_scheduler.millis_to_wait(now) == delay * 31
+    assert not set(query_scheduler.process_ready_types(now + delay * 20))
+
+    assert set(query_scheduler.process_ready_types(now + delay * 31)) == {
+        "_http._tcp.local."
+    }

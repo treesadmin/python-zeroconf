@@ -350,7 +350,7 @@ def test_goodbye_all_services():
     out = zc.generate_unregister_all_services()
     assert out is None
     type_ = "_http._tcp.local."
-    registration_name = "xxxyyy.%s" % type_
+    registration_name = f"xxxyyy.{type_}"
     desc = {'path': '/~paulsm/'}
     info = r.ServiceInfo(
         type_, registration_name, 80, 0, 0, desc, "ash-2.local.", addresses=[socket.inet_aton("10.0.1.2")]
@@ -510,11 +510,10 @@ def test_tc_bit_defers():
     generated.add_answer_at_time(info3.dns_pointer(), now)
     packets = generated.packets()
     assert len(packets) == 4
-    expected_deferred = []
     source_ip = '203.0.113.13'
 
     next_packet = r.DNSIncoming(packets.pop(0))
-    expected_deferred.append(next_packet)
+    expected_deferred = [next_packet]
     threadsafe_query(zc, protocol, next_packet, source_ip, const._MDNS_PORT, None)
     assert protocol._deferred[source_ip] == expected_deferred
     assert source_ip in protocol._timers
@@ -590,10 +589,8 @@ def test_tc_bit_defers_last_response_missing():
     generated.add_answer_at_time(info3.dns_pointer(), now)
     packets = generated.packets()
     assert len(packets) == 4
-    expected_deferred = []
-
     next_packet = r.DNSIncoming(packets.pop(0))
-    expected_deferred.append(next_packet)
+    expected_deferred = [next_packet]
     threadsafe_query(zc, protocol, next_packet, source_ip, const._MDNS_PORT, None)
     assert protocol._deferred[source_ip] == expected_deferred
     timer1 = protocol._timers[source_ip]
@@ -692,7 +689,7 @@ def test_guard_against_oversized_packets():
 
     generated = r.DNSOutgoing(const._FLAGS_QR_RESPONSE)
 
-    for i in range(5000):
+    for _ in range(5000):
         generated.add_answer_at_time(
             r.DNSText(
                 "packet{i}.local.",

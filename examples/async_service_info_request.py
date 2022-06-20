@@ -23,18 +23,19 @@ async def async_watch_services(aiozc: AsyncZeroconf) -> None:
     zeroconf = aiozc.zeroconf
     while True:
         await asyncio.sleep(5)
-        infos = []
-        for name in zeroconf.cache.names():
-            if not name.endswith(HAP_TYPE):
-                continue
-            infos.append(AsyncServiceInfo(HAP_TYPE, name))
+        infos = [
+            AsyncServiceInfo(HAP_TYPE, name)
+            for name in zeroconf.cache.names()
+            if name.endswith(HAP_TYPE)
+        ]
+
         tasks = [info.async_request(aiozc.zeroconf, 3000) for info in infos]
         await asyncio.gather(*tasks)
         for info in infos:
-            print("Info for %s" % (info.name))
+            print(f"Info for {info.name}")
             if info:
                 addresses = ["%s:%d" % (addr, cast(int, info.port)) for addr in info.parsed_addresses()]
-                print("  Addresses: %s" % ", ".join(addresses))
+                print(f'  Addresses: {", ".join(addresses)}')
                 print("  Weight: %d, priority: %d" % (info.weight, info.priority))
                 print(f"  Server: {info.server}")
                 if info.properties:

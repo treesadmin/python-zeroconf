@@ -52,18 +52,17 @@ if __name__ == '__main__':
     else:
         ip_version = IPVersion.V4Only
 
-    infos = []
-    for i in range(250):
-        infos.append(
-            AsyncServiceInfo(
-                "_http._tcp.local.",
-                f"Paul's Test Web Site {i}._http._tcp.local.",
-                addresses=[socket.inet_aton("127.0.0.1")],
-                port=80,
-                properties={'path': '/~paulsm/'},
-                server=f"zcdemohost-{i}.local.",
-            )
+    infos = [
+        AsyncServiceInfo(
+            "_http._tcp.local.",
+            f"Paul's Test Web Site {i}._http._tcp.local.",
+            addresses=[socket.inet_aton("127.0.0.1")],
+            port=80,
+            properties={'path': '/~paulsm/'},
+            server=f"zcdemohost-{i}.local.",
         )
+        for i in range(250)
+    ]
 
     print("Registration of 250 services...")
     loop = asyncio.get_event_loop()

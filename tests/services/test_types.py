@@ -36,7 +36,7 @@ class ServiceTypesQuery(unittest.TestCase):
 
         type_ = "_test-listen-type._tcp.local."
         name = "xxxyyy"
-        registration_name = "%s.%s" % (name, type_)
+        registration_name = f"{name}.{type_}"
 
         zeroconf_registrar = Zeroconf(interfaces=['127.0.0.1'])
         desc = {'path': '/~paulsm/'}
@@ -72,7 +72,7 @@ class ServiceTypesQuery(unittest.TestCase):
 
         type_ = "_test-listenv6rec-type._tcp.local."
         name = "xxxyyy"
-        registration_name = "%s.%s" % (name, type_)
+        registration_name = f"{name}.{type_}"
         addr = "2606:2800:220:1:248:1893:25c8:1946"  # example.com
 
         zeroconf_registrar = Zeroconf(interfaces=['127.0.0.1'])
@@ -109,7 +109,7 @@ class ServiceTypesQuery(unittest.TestCase):
 
         type_ = "_test-listenv6ip-type._tcp.local."
         name = "xxxyyy"
-        registration_name = "%s.%s" % (name, type_)
+        registration_name = f"{name}.{type_}"
         addr = "2606:2800:220:1:248:1893:25c8:1946"  # example.com
 
         zeroconf_registrar = Zeroconf(ip_version=r.IPVersion.V6Only)
@@ -145,8 +145,8 @@ class ServiceTypesQuery(unittest.TestCase):
         type_ = "_listen._tcp.local."
         name = "xxxyyy"
         # Note: discovery returns only DNS-SD type not subtype
-        discovery_type = "%s.%s" % (subtype_, type_)
-        registration_name = "%s.%s" % (name, type_)
+        discovery_type = f"{subtype_}.{type_}"
+        registration_name = f"{name}.{type_}"
 
         zeroconf_registrar = Zeroconf(interfaces=['127.0.0.1'])
         desc = {'path': '/~paulsm/'}

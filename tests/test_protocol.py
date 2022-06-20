@@ -258,7 +258,7 @@ class PacketGeneration(unittest.TestCase):
         generated = r.DNSOutgoing(const._FLAGS_QR_QUERY)
         questions = []
         for _ in range(30):
-            question = r.DNSQuestion(f"_hap._tcp.local.", const._TYPE_PTR, const._CLASS_IN)
+            question = r.DNSQuestion("_hap._tcp.local.", const._TYPE_PTR, const._CLASS_IN)
             generated.add_question(question)
             questions.append(question)
         assert len(generated.questions) == 30
@@ -297,8 +297,11 @@ class PacketGeneration(unittest.TestCase):
         questions = []
         for _ in range(30):
             question = r.DNSQuestion(
-                f"_hap._tcp.local.", const._TYPE_PTR, const._CLASS_IN | const._CLASS_UNIQUE
+                "_hap._tcp.local.",
+                const._TYPE_PTR,
+                const._CLASS_IN | const._CLASS_UNIQUE,
             )
+
             generated.add_question(question)
             questions.append(question)
         assert len(generated.questions) == 30
@@ -339,7 +342,7 @@ class PacketGeneration(unittest.TestCase):
         """
         generated = r.DNSOutgoing(const._FLAGS_QR_RESPONSE)
         query = r.DNSIncoming(r.DNSOutgoing(const._FLAGS_QR_QUERY).packets()[0])
-        for i in range(3):
+        for _ in range(3):
             generated.add_answer(
                 query,
                 r.DNSText(
@@ -462,7 +465,7 @@ class PacketForm(unittest.TestCase):
     def test_numbers_questions(self):
         generated = r.DNSOutgoing(const._FLAGS_QR_RESPONSE)
         question = r.DNSQuestion("testname.local.", const._TYPE_SRV, const._CLASS_IN)
-        for i in range(10):
+        for _ in range(10):
             generated.add_question(question)
         bytes = generated.packets()[0]
         (num_questions, num_answers, num_authorities, num_additionals) = struct.unpack('!4H', bytes[4:12])
@@ -681,7 +684,7 @@ def test_tc_bit_in_query_packet():
     for i in range(30):
         out.add_answer_at_time(
             DNSText(
-                ("HASS Bridge W9DN %s._hap._tcp.local." % i),
+                f"HASS Bridge W9DN {i}._hap._tcp.local.",
                 const._TYPE_TXT,
                 const._CLASS_IN | const._CLASS_UNIQUE,
                 const._DNS_OTHER_TTL,
@@ -690,6 +693,7 @@ def test_tc_bit_in_query_packet():
             ),
             0,
         )
+
 
     packets = out.packets()
     assert len(packets) == 3
@@ -713,7 +717,7 @@ def test_tc_bit_not_set_in_answer_packet():
     for i in range(30):
         out.add_answer_at_time(
             DNSText(
-                ("HASS Bridge W9DN %s._hap._tcp.local." % i),
+                f"HASS Bridge W9DN {i}._hap._tcp.local.",
                 const._TYPE_TXT,
                 const._CLASS_IN | const._CLASS_UNIQUE,
                 const._DNS_OTHER_TTL,
@@ -722,6 +726,7 @@ def test_tc_bit_not_set_in_answer_packet():
             ),
             0,
         )
+
 
     packets = out.packets()
     assert len(packets) == 3
@@ -784,7 +789,7 @@ def test_records_same_packet_share_fate():
     for i in range(30):
         out.add_answer_at_time(
             DNSText(
-                ("HASS Bridge W9DN %s._hap._tcp.local." % i),
+                f"HASS Bridge W9DN {i}._hap._tcp.local.",
                 const._TYPE_TXT,
                 const._CLASS_IN | const._CLASS_UNIQUE,
                 const._DNS_OTHER_TTL,
@@ -793,6 +798,7 @@ def test_records_same_packet_share_fate():
             ),
             0,
         )
+
 
     for packet in out.packets():
         dnsin = DNSIncoming(packet)

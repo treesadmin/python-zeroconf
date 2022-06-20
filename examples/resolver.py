@@ -2,6 +2,7 @@
 
 """ Example of resolving a service with a known name """
 
+
 import logging
 import sys
 
@@ -19,6 +20,6 @@ if __name__ == '__main__':
     zeroconf = Zeroconf()
 
     try:
-        print(zeroconf.get_service_info(TYPE, NAME + '.' + TYPE))
+        print(zeroconf.get_service_info(TYPE, f'{NAME}.{TYPE}'))
     finally:
         zeroconf.close()

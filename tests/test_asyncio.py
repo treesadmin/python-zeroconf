@@ -523,8 +523,7 @@ async def test_service_info_async_request() -> None:
         "ash-5.local.",
         addresses=[socket.inet_aton("10.0.1.5")],
     )
-    tasks = []
-    tasks.append(await aiozc.async_register_service(info))
+    tasks = [await aiozc.async_register_service(info)]
     tasks.append(await aiozc.async_register_service(info2))
     await asyncio.gather(*tasks)
 
@@ -700,14 +699,18 @@ async def test_async_unregister_all_services() -> None:
         "ash-5.local.",
         addresses=[socket.inet_aton("10.0.1.5")],
     )
-    tasks = []
-    tasks.append(await aiozc.async_register_service(info))
+    tasks = [await aiozc.async_register_service(info)]
     tasks.append(await aiozc.async_register_service(info2))
     await asyncio.gather(*tasks)
 
     tasks = []
-    tasks.append(aiozc.async_get_service_info(type_, registration_name))
-    tasks.append(aiozc.async_get_service_info(type_, registration_name2))
+    tasks.extend(
+        (
+            aiozc.async_get_service_info(type_, registration_name),
+            aiozc.async_get_service_info(type_, registration_name2),
+        )
+    )
+
     results = await asyncio.gather(*tasks)
     assert results[0] is not None
     assert results[1] is not None
@@ -716,8 +719,13 @@ async def test_async_unregister_all_services() -> None:
     _clear_cache(aiozc.zeroconf)
 
     tasks = []
-    tasks.append(aiozc.async_get_service_info(type_, registration_name))
-    tasks.append(aiozc.async_get_service_info(type_, registration_name2))
+    tasks.extend(
+        (
+            aiozc.async_get_service_info(type_, registration_name),
+            aiozc.async_get_service_info(type_, registration_name2),
+        )
+    )
+
     results = await asyncio.gather(*tasks)
     assert results[0] is None
     assert results[1] is None

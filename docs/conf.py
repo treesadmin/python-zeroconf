@@ -248,6 +248,6 @@ def skip_member(app, what, name, obj, skip, options):
     return (
         skip
         or getattr(obj, '__doc__', None) is None
-        or getattr(obj, '__private__', False) is True
-        or getattr(getattr(obj, '__func__', None), '__private__', False) is True
+        or getattr(obj, '__private__', False)
+        or getattr(getattr(obj, '__func__', None), '__private__', False)
     )

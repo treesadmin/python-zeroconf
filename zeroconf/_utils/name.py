@@ -32,7 +32,7 @@ from ..const import (
 )
 
 
-def service_type_name(type_: str, *, strict: bool = True) -> str:  # pylint: disable=too-many-branches
+def service_type_name(type_: str, *, strict: bool = True) -> str:    # pylint: disable=too-many-branches
     """
     Validate a fully qualified service name, instance or subtype. [rfc6763]
 
@@ -76,7 +76,7 @@ def service_type_name(type_: str, *, strict: bool = True) -> str:  # pylint: dis
     """
     if len(type_) > 256:
         # https://datatracker.ietf.org/doc/html/rfc6763#section-7.2
-        raise BadTypeInNameException("Full name (%s) must be > 256 bytes" % type_)
+        raise BadTypeInNameException(f"Full name ({type_}) must be > 256 bytes")
 
     if type_.endswith((_TCP_PROTOCOL_LOCAL_TRAILER, _NONTCP_PROTOCOL_LOCAL_TRAILER)):
         remaining = type_[: -len(_TCP_PROTOCOL_LOCAL_TRAILER)].split('.')
@@ -109,7 +109,10 @@ def service_type_name(type_: str, *, strict: bool = True) -> str:  # pylint: dis
 
         if strict and len(test_service_name) > 15:
             # https://datatracker.ietf.org/doc/html/rfc6763#section-7.2
-            raise BadTypeInNameException("Service name (%s) must be <= 15 bytes" % test_service_name)
+            raise BadTypeInNameException(
+                f"Service name ({test_service_name}) must be <= 15 bytes"
+            )
+
 
         if '--' in test_service_name:
             raise BadTypeInNameException("Service name (%s) must not contain '--'" % test_service_name)

@@ -98,14 +98,7 @@ class DNSEntry:
 
     def entry_to_string(self, hdr: str, other: Optional[Union[bytes, str]]) -> str:
         """String representation with additional information"""
-        return "{}[{},{}{},{}]{}".format(
-            hdr,
-            self.get_type(self.type),
-            self.get_class_(self.class_),
-            "-unique" if self.unique else "",
-            self.name,
-            "=%s" % cast(Any, other) if other is not None else "",
-        )
+        return f'{hdr}[{self.get_type(self.type)},{self.get_class_(self.class_)}{"-unique" if self.unique else ""},{self.name}]{f"={cast(Any, other)}" if other is not None else ""}'
 
 
 class DNSQuestion(DNSEntry):
@@ -150,12 +143,7 @@ class DNSQuestion(DNSEntry):
 
     def __repr__(self) -> str:
         """String representation"""
-        return "{}[question,{},{},{}]".format(
-            self.get_type(self.type),
-            "QU" if self.unicast else "QM",
-            self.get_class_(self.class_),
-            self.name,
-        )
+        return f'{self.get_type(self.type)}[question,{"QU" if self.unicast else "QM"},{self.get_class_(self.class_)},{self.name}]'
 
 
 class DNSRecord(DNSEntry):
@@ -313,7 +301,7 @@ class DNSHinfo(DNSRecord):
 
     def __repr__(self) -> str:
         """String representation"""
-        return self.to_string(self.cpu + " " + self.os)
+        return self.to_string(f"{self.cpu} {self.os}")
 
 
 class DNSPointer(DNSRecord):
@@ -393,7 +381,7 @@ class DNSText(DNSRecord):
     def __repr__(self) -> str:
         """String representation"""
         if len(self.text) > 10:
-            return self.to_string(self.text[:7]) + "..."
+            return f"{self.to_string(self.text[:7])}..."
         return self.to_string(self.text)
 
 
@@ -480,7 +468,7 @@ class DNSNsec(DNSRecord):
             byte = offset // 8
             total_octets = byte + 1
             bitmap[byte] |= 0x80 >> (offset % 8)
-        out_bytes = bytes(bitmap[0:total_octets])
+        out_bytes = bytes(bitmap[:total_octets])
         out.write_name(self.next_name)
         out.write_short(0)
         out.write_short(len(out_bytes))
@@ -502,7 +490,8 @@ class DNSNsec(DNSRecord):
     def __repr__(self) -> str:
         """String representation"""
         return self.to_string(
-            self.next_name + "," + "|".join([self.get_type(type_) for type_ in self.rdtypes])
+            f"{self.next_name},"
+            + "|".join([self.get_type(type_) for type_ in self.rdtypes])
         )
 
 

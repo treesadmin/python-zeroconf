@@ -24,7 +24,7 @@ def on_service_state_change(
 
         if info:
             addresses = ["%s:%d" % (addr, cast(int, info.port)) for addr in info.parsed_scoped_addresses()]
-            print("  Addresses: %s" % ", ".join(addresses))
+            print(f'  Addresses: {", ".join(addresses)}')
             print("  Weight: %d, priority: %d" % (info.weight, info.priority))
             print(f"  Server: {info.server}")
             if info.properties:

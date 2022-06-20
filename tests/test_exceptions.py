@@ -62,7 +62,12 @@ class Exceptions(unittest.TestCase):
             '\x00._x._udp.local.',
         )
         for name in bad_names_to_try:
-            self.assertRaises(r.BadTypeInNameException, self.browser.get_service_info, name, 'x.' + name)
+            self.assertRaises(
+                r.BadTypeInNameException,
+                self.browser.get_service_info,
+                name,
+                f'x.{name}',
+            )
 
     def test_bad_local_names_for_get_service_info(self):
         bad_names_to_try = (

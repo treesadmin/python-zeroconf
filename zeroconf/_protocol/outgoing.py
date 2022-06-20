@@ -88,12 +88,12 @@ class DNSOutgoing(DNSMessage):
     def __repr__(self) -> str:
         return '<DNSOutgoing:{%s}>' % ', '.join(
             [
-                'multicast=%s' % self.multicast,
-                'flags=%s' % self.flags,
-                'questions=%s' % self.questions,
-                'answers=%s' % self.answers,
-                'authorities=%s' % self.authorities,
-                'additionals=%s' % self.additionals,
+                f'multicast={self.multicast}',
+                f'flags={self.flags}',
+                f'questions={self.questions}',
+                f'answers={self.answers}',
+                f'authorities={self.authorities}',
+                f'additionals={self.additionals}',
             ]
         )
 
@@ -161,11 +161,10 @@ class DNSOutgoing(DNSMessage):
         self, cache: DNSCache, now: float, name: str, type_: int, class_: int
     ) -> None:
         """Add a question if it is not already cached."""
-        cached_entry = cache.get_by_details(name, type_, class_)
-        if not cached_entry:
-            self.add_question(DNSQuestion(name, type_, class_))
-        else:
+        if cached_entry := cache.get_by_details(name, type_, class_):
             self.add_answer_at_time(cached_entry, now)
+        else:
+            self.add_question(DNSQuestion(name, type_, class_))
 
     def add_question_or_all_cache(
         self, cache: DNSCache, now: float, name: str, type_: int, class_: int
@@ -242,16 +241,14 @@ class DNSOutgoing(DNSMessage):
 
         # split name into each label
         name_length = None
-        if name.endswith('.'):
-            name = name[: len(name) - 1]
+        name = name.removesuffix('.')
         labels = name.split('.')
         # Write each new label or a pointer to the existing
         # on in the packet
         start_size = self.size
         for count in range(len(labels)):
             label = name if count == 0 else '.'.join(labels[count:])
-            index = self.names.get(label)
-            if index:
+            if index := self.names.get(label):
                 # If part of the name already exists in the packet,
                 # create a pointer to it
                 self._write_byte((index >> 8) | 0xC0)

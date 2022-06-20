@@ -480,7 +480,7 @@ class TestServiceInfo(unittest.TestCase):
 
 def test_multiple_addresses():
     type_ = "_http._tcp.local."
-    registration_name = "xxxyyy.%s" % type_
+    registration_name = f"xxxyyy.{type_}"
     desc = {'path': '/~paulsm/'}
     address_parsed = "10.0.1.2"
     address = socket.inet_aton(address_parsed)
@@ -563,7 +563,7 @@ def test_multiple_addresses():
 async def test_multiple_a_addresses_newest_address_first():
     """Test that info.addresses returns the newest seen address first."""
     type_ = "_http._tcp.local."
-    registration_name = "multiarec.%s" % type_
+    registration_name = f"multiarec.{type_}"
     desc = {'path': '/~paulsm/'}
     aiozc = AsyncZeroconf(interfaces=['127.0.0.1'])
     cache = aiozc.zeroconf.cache
@@ -582,7 +582,7 @@ async def test_multiple_a_addresses_newest_address_first():
 @pytest.mark.asyncio
 async def test_invalid_a_addresses(caplog):
     type_ = "_http._tcp.local."
-    registration_name = "multiarec.%s" % type_
+    registration_name = f"multiarec.{type_}"
     desc = {'path': '/~paulsm/'}
     aiozc = AsyncZeroconf(interfaces=['127.0.0.1'])
     cache = aiozc.zeroconf.cache
@@ -627,7 +627,7 @@ def test_changing_name_updates_serviceinfo_key():
     name = "MyTestHome"
     info_service = ServiceInfo(
         type_,
-        '%s.%s' % (name, type_),
+        f'{name}.{type_}',
         80,
         0,
         0,
@@ -635,6 +635,7 @@ def test_changing_name_updates_serviceinfo_key():
         "ash-2.local.",
         addresses=[socket.inet_aton("10.0.1.2")],
     )
+
     assert info_service.key == "mytesthome._homeassistant._tcp.local."
     info_service.name = "YourTestHome._homeassistant._tcp.local."
     assert info_service.key == "yourtesthome._homeassistant._tcp.local."
@@ -649,7 +650,7 @@ def test_serviceinfo_address_updates():
     with pytest.raises(TypeError):
         info_service = ServiceInfo(
             type_,
-            '%s.%s' % (name, type_),
+            f'{name}.{type_}',
             80,
             0,
             0,
@@ -659,9 +660,10 @@ def test_serviceinfo_address_updates():
             parsed_addresses=["10.0.1.2"],
         )
 
+
     info_service = ServiceInfo(
         type_,
-        '%s.%s' % (name, type_),
+        f'{name}.{type_}',
         80,
         0,
         0,
@@ -669,6 +671,7 @@ def test_serviceinfo_address_updates():
         "ash-2.local.",
         addresses=[socket.inet_aton("10.0.1.2")],
     )
+
     info_service.addresses = [socket.inet_aton("10.0.1.3")]
     assert info_service.addresses == [socket.inet_aton("10.0.1.3")]
 
@@ -680,12 +683,20 @@ def test_serviceinfo_accepts_bytes_or_string_dict():
     addresses = [socket.inet_aton("10.0.1.2")]
     server_name = "ash-2.local."
     info_service = ServiceInfo(
-        type_, '%s.%s' % (name, type_), 80, 0, 0, {b'path': b'/~paulsm/'}, server_name, addresses=addresses
+        type_,
+        f'{name}.{type_}',
+        80,
+        0,
+        0,
+        {b'path': b'/~paulsm/'},
+        server_name,
+        addresses=addresses,
     )
+
     assert info_service.dns_text().text == b'\x0epath=/~paulsm/'
     info_service = ServiceInfo(
         type_,
-        '%s.%s' % (name, type_),
+        f'{name}.{type_}',
         80,
         0,
         0,
@@ -693,10 +704,11 @@ def test_serviceinfo_accepts_bytes_or_string_dict():
         server_name,
         addresses=addresses,
     )
+
     assert info_service.dns_text().text == b'\x0epath=/~paulsm/'
     info_service = ServiceInfo(
         type_,
-        '%s.%s' % (name, type_),
+        f'{name}.{type_}',
         80,
         0,
         0,
@@ -704,10 +716,11 @@ def test_serviceinfo_accepts_bytes_or_string_dict():
         server_name,
         addresses=addresses,
     )
+
     assert info_service.dns_text().text == b'\x0epath=/~paulsm/'
     info_service = ServiceInfo(
         type_,
-        '%s.%s' % (name, type_),
+        f'{name}.{type_}',
         80,
         0,
         0,
@@ -715,6 +728,7 @@ def test_serviceinfo_accepts_bytes_or_string_dict():
         server_name,
         addresses=addresses,
     )
+
     assert info_service.dns_text().text == b'\x0epath=/~paulsm/'
 
 

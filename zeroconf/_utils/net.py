@@ -71,14 +71,26 @@ def _encode_address(address: str) -> bytes:
 
 
 def get_all_addresses() -> List[str]:
-    return list(set(addr.ip for iface in ifaddr.get_adapters() for addr in iface.ips if addr.is_IPv4))
+    return list(
+        {
+            addr.ip
+            for iface in ifaddr.get_adapters()
+            for addr in iface.ips
+            if addr.is_IPv4
+        }
+    )
 
 
 def get_all_addresses_v6() -> List[Tuple[Tuple[str, int, int], int]]:
     # IPv6 multicast uses positive indexes for interfaces
     # TODO: What about multi-address interfaces?
     return list(
-        set((addr.ip, iface.index) for iface in ifaddr.get_adapters() for addr in iface.ips if addr.is_IPv6)
+        {
+            (addr.ip, iface.index)
+            for iface in ifaddr.get_adapters()
+            for addr in iface.ips
+            if addr.is_IPv6
+        }
     )
 
 
@@ -90,7 +102,7 @@ def ip6_to_address_and_index(adapters: List[Any], ip: str) -> Tuple[Tuple[str, i
             if isinstance(adapter_ip.ip, tuple) and ipaddress.ip_address(adapter_ip.ip[0]) == ipaddr:
                 return (cast(Tuple[str, int, int], adapter_ip.ip), cast(int, adapter.index))
 
-    raise RuntimeError('No adapter found for IP address %s' % ip)
+    raise RuntimeError(f'No adapter found for IP address {ip}')
 
 
 def interface_index_to_ip6_address(adapters: List[Any], index: int) -> Tuple[str, int, int]:
@@ -101,7 +113,7 @@ def interface_index_to_ip6_address(adapters: List[Any], index: int) -> Tuple[str
                 if isinstance(adapter_ip.ip, tuple):
                     return cast(Tuple[str, int, int], adapter_ip.ip)
 
-    raise RuntimeError('No adapter found for index %s' % index)
+    raise RuntimeError(f'No adapter found for index {index}')
 
 
 def ip6_addresses_to_indexes(
@@ -149,8 +161,9 @@ def normalize_interface_choice(
             result.extend(get_all_addresses())
         if not result:
             raise RuntimeError(
-                'No interfaces to listen on, check that any interfaces have IP version %s' % ip_version
+                f'No interfaces to listen on, check that any interfaces have IP version {ip_version}'
             )
+
     elif isinstance(choice, list):
         # First, take IPv4 addresses.
         result = [i for i in choice if isinstance(i, str) and ipaddress.ip_address(i).version == 4]
@@ -355,12 +368,7 @@ def create_sockets(
     respond_sockets = []
 
     for i in normalized_interfaces:
-        if not unicast:
-            if add_multicast_member(cast(socket.socket, listen_socket), i):
-                respond_socket = new_respond_socket(i, apple_p2p=apple_p2p)
-            else:
-                respond_socket = None
-        else:
+        if unicast:
             respond_socket = new_socket(
                 port=0,
                 ip_version=ip_version,
@@ -368,6 +376,10 @@ def create_sockets(
                 bind_addr=i[0] if isinstance(i, tuple) else (i,),
             )
 
+        elif add_multicast_member(cast(socket.socket, listen_socket), i):
+            respond_socket = new_respond_socket(i, apple_p2p=apple_p2p)
+        else:
+            respond_socket = None
         if respond_socket is not None:
             respond_sockets.append(respond_socket)
 
